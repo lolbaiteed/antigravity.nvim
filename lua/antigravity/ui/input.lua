@@ -10,6 +10,9 @@ function M.setup_input(popup, on_submit)
   local winid = popup.winid
   utils.log("info", "[DEBUG] setup_input bufnr=" .. tostring(bufnr) .. " winid=" .. tostring(winid))
   
+  -- Set buffer as modifiable for input
+  vim.bo[bufnr].modifiable = true
+  
   -- Render placeholder initially
   M.show_placeholder(bufnr)
   
@@ -44,6 +47,8 @@ function M.setup_input(popup, on_submit)
   -- Submit keymaps
   local function submit_msg()
     utils.log("info", "[DEBUG] submit_msg triggered!")
+    utils.log("info", "[DEBUG] Current buffer: " .. tostring(vim.api.nvim_get_current_buf()))
+    utils.log("info", "[DEBUG] Input buffer: " .. tostring(bufnr))
     local text = M.get_text(bufnr)
     if text ~= "" then
       on_submit(text)
