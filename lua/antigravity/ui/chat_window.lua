@@ -158,10 +158,8 @@ function M.open()
       -- Conversation reset
       renderer.render_messages(chat_popup.bufnr, {})
     else
-      if msg.role ~= "assistant" then
-        renderer.render_messages(chat_popup.bufnr, chat.get_messages())
-      else
-        -- Completed assistant message
+      -- Only re-render for user messages, not assistant (streaming is handled by chunks)
+      if msg.role == "user" then
         renderer.render_messages(chat_popup.bufnr, chat.get_messages())
       end
     end
