@@ -82,7 +82,7 @@ function M.open()
 
   -- Construct Layout inside the split window
   local layout = nui_layout(
-    sidebar_split.winid,
+    sidebar_split,
     nui_layout.Box({
       nui_layout.Box(chat_popup, { grow = 1 }),
       nui_layout.Box(input_popup, { size = config.options.window.input_height }),
