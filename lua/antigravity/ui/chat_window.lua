@@ -104,22 +104,31 @@ function M.open()
   -- Render existing chat history
   renderer.render_messages(chat_popup.bufnr, chat.get_messages())
 
-  -- Configure input submit
-  input_module.setup_input(input_popup, function(text)
-    local context = nil
-    -- If original window is valid, grab context from it
-    if original_winid and vim.api.nvim_win_is_valid(original_winid) then
-      local current_win = vim.api.nvim_get_current_win()
-      vim.api.nvim_set_current_win(original_winid)
-      context = utils.get_buffer_context()
-      vim.api.nvim_set_current_win(current_win)
-    else
-      context = utils.get_buffer_context()
-    end
+  -- Configure input submit and focus window after layout finishes mounting
+  vim.defer_fn(function()
+    if not M.is_open() then return end
     
-    renderer.start_assistant_message(chat_popup.bufnr)
-    chat.send_message(text, context)
-  end)
+    input_module.setup_input(input_popup, function(text)
+      local context = nil
+      -- If original window is valid, grab context from it
+      if original_winid and vim.api.nvim_win_is_valid(original_winid) then
+        local current_win = vim.api.nvim_get_current_win()
+        vim.api.nvim_set_current_win(original_winid)
+        context = utils.get_buffer_context()
+        vim.api.nvim_set_current_win(current_win)
+      else
+        context = utils.get_buffer_context()
+      end
+      
+      renderer.start_assistant_message(chat_popup.bufnr)
+      chat.send_message(text, context)
+    end)
+
+    -- Focus the input window explicitly once it's mounted
+    if input_popup and input_popup.winid and vim.api.nvim_win_is_valid(input_popup.winid) then
+      pcall(vim.api.nvim_set_current_win, input_popup.winid)
+    end
+  end, 50)
 
   -- Chat display local keymaps
   local map_opts = { buffer = chat_popup.bufnr, noremap = true, silent = true }
@@ -173,10 +182,7 @@ function M.open()
     scroll_to_bottom()
   end)
 
-  -- Focus the input window explicitly
-  if input_popup and input_popup.winid and vim.api.nvim_win_is_valid(input_popup.winid) then
-    pcall(vim.api.nvim_set_current_win, input_popup.winid)
-  end
+  end)
 end
 
 function M.close()
