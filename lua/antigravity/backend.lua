@@ -61,15 +61,56 @@ local function parse_messages()
   end
 end
 
+local is_setting_up = false
+
 function M.start()
   if job_id then return end
+  if is_setting_up then return end
+
+  local plugin_dir = utils.get_plugin_dir()
+  local venv_dir = plugin_dir .. "/.venv"
+  local venv_python = venv_dir .. "/bin/python"
+  
+  local python_exe = config.options.backend.python_cmd
+  if python_exe == "python3" and vim.fn.executable(venv_python) == 1 then
+    python_exe = venv_python
+  end
+
+  -- Auto-create virtual environment if missing
+  if python_exe == "python3" and vim.fn.executable(venv_python) == 0 then
+    is_setting_up = true
+    utils.log("info", "Creating plugin virtual environment at " .. venv_dir .. "...")
+    vim.fn.jobstart({ "python3", "-m", "venv", venv_dir }, {
+      on_exit = function(_, code)
+        if code ~= 0 then
+          utils.log("error", "Failed to create virtual environment. Ensure 'python3-venv' or 'python3-full' is installed.")
+          is_setting_up = false
+          return
+        end
+        
+        utils.log("info", "Installing google-antigravity inside virtual environment...")
+        vim.fn.jobstart({ venv_python, "-m", "pip", "install", "google-antigravity" }, {
+          on_exit = function(_, pip_code)
+            is_setting_up = false
+            if pip_code ~= 0 then
+              utils.log("error", "Failed to install google-antigravity package.")
+            else
+              utils.log("info", "Virtual environment configured successfully!")
+              M.start()
+            end
+          end
+        })
+      end
+    })
+    return
+  end
 
   local script_path = config.options.backend.script_path
   if not script_path then
-    script_path = utils.get_plugin_dir() .. "/python/antigravity_backend.py"
+    script_path = plugin_dir .. "/python/antigravity_backend.py"
   end
 
-  local cmd = { config.options.backend.python_cmd, script_path }
+  local cmd = { python_exe, script_path }
   
   read_buffer = ""
   
