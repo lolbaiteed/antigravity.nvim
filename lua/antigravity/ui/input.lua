@@ -41,6 +41,7 @@ function M.setup_input(popup, on_submit)
   
   -- Submit keymaps
   local function submit_msg()
+    print("[DEBUG] submit_msg triggered!")
     local text = M.get_text(bufnr)
     if text ~= "" then
       on_submit(text)
