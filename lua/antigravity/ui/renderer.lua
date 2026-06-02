@@ -110,6 +110,7 @@ function M.start_assistant_message(bufnr)
   
   stream_buffer = ""
   current_stream_line = new_line_count - 1  -- Track where content will be written
+  utils.log("info", "[DEBUG] start_assistant_message: current_stream_line=" .. tostring(current_stream_line))
   vim.bo[bufnr].modifiable = false
 end
 
@@ -117,12 +118,17 @@ function M.append_stream_chunk(bufnr, text)
   vim.bo[bufnr].modifiable = true
   stream_buffer = stream_buffer .. text
   
+  utils.log("info", "[DEBUG] append_stream_chunk: accumulated=" .. tostring(#stream_buffer) .. " chars")
+  
   -- Split accumulated stream into lines
   local new_lines = vim.split(stream_buffer, "\n")
   
   -- Replace from the content start line onwards (where we started the assistant message)
   if current_stream_line >= 0 then
+    utils.log("info", "[DEBUG] append_stream_chunk: writing to line " .. tostring(current_stream_line) .. " with " .. tostring(#new_lines) .. " lines")
     vim.api.nvim_buf_set_lines(bufnr, current_stream_line, -1, false, new_lines)
+  else
+    utils.log("warn", "[DEBUG] append_stream_chunk: current_stream_line is -1, skipping update")
   end
   
   vim.bo[bufnr].modifiable = false
@@ -131,6 +137,7 @@ end
 function M.finish_assistant_message(bufnr)
   -- Add to chat history in core module
   local chat = require("antigravity.chat")
+  utils.log("info", "[DEBUG] finish_assistant_message: adding message with " .. tostring(#stream_buffer) .. " chars")
   chat.add_assistant_message(stream_buffer)
   stream_buffer = ""
   current_stream_line = -1  -- Reset for next message
