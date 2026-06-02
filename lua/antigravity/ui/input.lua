@@ -1,4 +1,5 @@
 local config = require("antigravity.config")
+local utils = require("antigravity.utils")
 
 local M = {}
 
@@ -7,7 +8,7 @@ local placeholder_ns = vim.api.nvim_create_namespace("antigravity_placeholder")
 function M.setup_input(popup, on_submit)
   local bufnr = popup.bufnr
   local winid = popup.winid
-  print("[DEBUG] setup_input bufnr=" .. tostring(bufnr) .. " winid=" .. tostring(winid))
+  utils.log("info", "[DEBUG] setup_input bufnr=" .. tostring(bufnr) .. " winid=" .. tostring(winid))
   
   -- Render placeholder initially
   M.show_placeholder(bufnr)
@@ -42,7 +43,7 @@ function M.setup_input(popup, on_submit)
   
   -- Submit keymaps
   local function submit_msg()
-    print("[DEBUG] submit_msg triggered!")
+    utils.log("info", "[DEBUG] submit_msg triggered!")
     local text = M.get_text(bufnr)
     if text ~= "" then
       on_submit(text)
