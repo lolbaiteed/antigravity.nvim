@@ -170,6 +170,8 @@ class AntigravityBackend:
                 # Dispatch
                 method = request.get("method")
                 params = request.get("params", {})
+                if not isinstance(params, dict):
+                    params = {}
                 req_id = request.get("id")
                 
                 if method == "initialize":
