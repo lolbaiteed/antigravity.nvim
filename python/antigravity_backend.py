@@ -23,9 +23,31 @@ class AntigravityBackend:
         self.default_agent = None
 
     async def initialize(self, params):
+        global SDK_AVAILABLE
         log("Initializing backend...")
         if not SDK_AVAILABLE:
-            log("google-antigravity SDK is not available. Running in ECHO mode.")
+            log("google-antigravity SDK is not available. Attempting automatic installation...")
+            try:
+                proc = await asyncio.create_subprocess_exec(
+                    sys.executable, "-m", "pip", "install", "google-antigravity",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE
+                )
+                stdout, stderr = await proc.communicate()
+                if proc.returncode == 0:
+                    log("google-antigravity installed successfully!")
+                    try:
+                        global Agent, LocalAgentConfig
+                        from google.antigravity import Agent, LocalAgentConfig
+                        SDK_AVAILABLE = True
+                    except ImportError:
+                        log("Installed but failed to import. Falling back to ECHO mode.")
+                else:
+                    log(f"Pip install failed with code {proc.returncode}. Stderr: {stderr.decode()}")
+            except Exception as e:
+                log(f"Auto-install encountered error: {e}")
+
+        if not SDK_AVAILABLE:
             return {"status": "echo_mode", "version": "0.1.0", "info": "google-antigravity SDK missing"}
         
         try:
