@@ -8,12 +8,6 @@ function M.setup_input(popup, on_submit)
   local bufnr = popup.bufnr
   local winid = popup.winid
   
-  -- Set options
-  vim.bo[bufnr].filetype = "markdown"
-  vim.bo[bufnr].buftype = "nofile"
-  vim.bo[bufnr].swapfile = false
-  vim.wo[winid].wrap = true
-  
   -- Render placeholder initially
   M.show_placeholder(bufnr)
   
