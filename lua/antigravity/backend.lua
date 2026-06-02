@@ -72,8 +72,12 @@ function M.start()
   local venv_python = venv_dir .. "/bin/python"
   
   local python_exe = config.options.backend.python_cmd
-  if python_exe == "python3" and vim.fn.executable(venv_python) == 1 then
-    python_exe = venv_python
+  if python_exe == "python3" then
+    if vim.g.python3_host_prog and vim.fn.executable(vim.g.python3_host_prog) == 1 then
+      python_exe = vim.g.python3_host_prog
+    elseif vim.fn.executable(venv_python) == 1 then
+      python_exe = venv_python
+    end
   end
 
   -- Auto-create virtual environment if missing
