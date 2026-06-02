@@ -181,8 +181,6 @@ function M.open()
     renderer.show_thinking(chat_popup.bufnr, is_thinking)
     scroll_to_bottom()
   end)
-
-  end)
 end
 
 function M.close()
