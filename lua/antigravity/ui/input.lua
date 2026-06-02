@@ -7,6 +7,7 @@ local placeholder_ns = vim.api.nvim_create_namespace("antigravity_placeholder")
 function M.setup_input(popup, on_submit)
   local bufnr = popup.bufnr
   local winid = popup.winid
+  print("[DEBUG] setup_input bufnr=" .. tostring(bufnr) .. " winid=" .. tostring(winid))
   
   -- Render placeholder initially
   M.show_placeholder(bufnr)
