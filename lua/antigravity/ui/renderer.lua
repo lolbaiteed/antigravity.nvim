@@ -7,6 +7,7 @@ local thinking_timer = nil
 local thinking_ns = vim.api.nvim_create_namespace("antigravity_thinking")
 local extmark_ns = vim.api.nvim_create_namespace("antigravity_extmarks")
 local stream_buffer = ""
+local current_stream_line = -1  -- Track where the current stream is being written
 
 function M.render_messages(bufnr, messages)
   -- Cancel active thinking spinner
@@ -81,6 +82,7 @@ function M.render_messages(bufnr, messages)
   
   vim.bo[bufnr].modifiable = false
   stream_buffer = ""
+  current_stream_line = -1  -- Reset stream line tracker
 end
 
 function M.start_assistant_message(bufnr)
@@ -107,6 +109,7 @@ function M.start_assistant_message(bufnr)
   })
   
   stream_buffer = ""
+  current_stream_line = new_line_count - 1  -- Track where content will be written
   vim.bo[bufnr].modifiable = false
 end
 
@@ -114,21 +117,13 @@ function M.append_stream_chunk(bufnr, text)
   vim.bo[bufnr].modifiable = true
   stream_buffer = stream_buffer .. text
   
-  -- Update last lines
-  local line_count = vim.api.nvim_buf_line_count(bufnr)
+  -- Split accumulated stream into lines
   local new_lines = vim.split(stream_buffer, "\n")
   
-  -- Determine where the assistant content starts
-  -- We appended the header at `new_line_count - 2`, and content starts at `new_line_count - 1`
-  -- Let's replace from the content start line onwards
-  -- Actually, let's keep it simple: find the header, replace lines below it.
-  -- Our assistant content starts at the last line currently.
-  local content_start = line_count - 1
-  -- If we've already written content, we replace it.
-  -- Let's trace content start:
-  local target_start = math.max(0, content_start)
-  
-  vim.api.nvim_buf_set_lines(bufnr, target_start, -1, false, new_lines)
+  -- Replace from the content start line onwards (where we started the assistant message)
+  if current_stream_line >= 0 then
+    vim.api.nvim_buf_set_lines(bufnr, current_stream_line, -1, false, new_lines)
+  end
   
   vim.bo[bufnr].modifiable = false
 end
@@ -138,6 +133,7 @@ function M.finish_assistant_message(bufnr)
   local chat = require("antigravity.chat")
   chat.add_assistant_message(stream_buffer)
   stream_buffer = ""
+  current_stream_line = -1  -- Reset for next message
 end
 
 function M.show_thinking(bufnr, is_thinking)
