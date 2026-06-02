@@ -17,7 +17,9 @@ end
 
 function M.open()
   if M.is_open() then
-    vim.api.nvim_set_current_win(input_popup.winid)
+    if input_popup and input_popup.winid and vim.api.nvim_win_is_valid(input_popup.winid) then
+      pcall(vim.api.nvim_set_current_win, input_popup.winid)
+    end
     return
   end
 
@@ -77,6 +79,14 @@ function M.open()
         top = " Message ",
         top_align = "left",
       },
+    },
+    buf_options = {
+      filetype = "markdown",
+      buftype = "nofile",
+      swapfile = false,
+    },
+    win_options = {
+      wrap = true,
     },
   })
 
@@ -162,6 +172,11 @@ function M.open()
     renderer.show_thinking(chat_popup.bufnr, is_thinking)
     scroll_to_bottom()
   end)
+
+  -- Focus the input window explicitly
+  if input_popup and input_popup.winid and vim.api.nvim_win_is_valid(input_popup.winid) then
+    pcall(vim.api.nvim_set_current_win, input_popup.winid)
+  end
 end
 
 function M.close()
