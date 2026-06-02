@@ -1,0 +1,53 @@
+*antigravity.txt*  VS Code-style Antigravity chat panel for Neovim
+
+==============================================================================
+INTRODUCTION                                                 *antigravity-intro*
+
+|antigravity.nvim| is a Neovim plugin that implements a VS Code-style sidebar
+chat interface powered by Google's Antigravity SDK. It features multi-turn
+conversations, stream rendering, code highlights, and file/selection context.
+
+Requirements:
+- Neovim >= 0.10.0
+- Nui.nvim
+- Python 3.10+ (with the `google-antigravity` package)
+
+==============================================================================
+USAGE                                                        *antigravity-usage*
+
+Commands:
+
+:AntigravityToggle              Toggle the chat sidebar panel.
+:AntigravityOpen                Open the chat sidebar panel.
+:AntigravityClose               Close the chat sidebar panel.
+:AntigravityAsk [message]       Ask a question directly. If no message is provided,
+                                opens the panel.
+:AntigravityNew                 Reset the conversation and start a new session.
+:AntigravitySendSelection       Send the visually selected text as context.
+
+==============================================================================
+CONFIGURATION                                               *antigravity-config*
+
+Initialize the plugin in your `init.lua`:
+>lua
+  require("antigravity").setup({
+    window = {
+      position = "right",       -- "right" or "left"
+      width = "35%",             -- sidebar panel width
+      input_height = 4,          -- input panel height
+    },
+    backend = {
+      python_cmd = "python3",   -- python binary path
+    },
+    keymaps = {
+      toggle = "<leader>ac",    -- global toggle binding
+    }
+  })
+<
+
+==============================================================================
+LICENSE                                                    *antigravity-license*
+
+Apache License 2.0
+
+vim:tw=78:ts=8:ft=help:norl:
