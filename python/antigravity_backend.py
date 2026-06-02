@@ -50,6 +50,10 @@ class AntigravityBackend:
         if not SDK_AVAILABLE:
             return {"status": "echo_mode", "version": "0.1.0", "info": "google-antigravity SDK missing"}
         
+        api_key = params.get("api_key")
+        if api_key:
+            os.environ["GEMINI_API_KEY"] = api_key
+
         try:
             config = LocalAgentConfig()
             self.default_agent = Agent(config)
