@@ -39,14 +39,21 @@ function M.setup_input(popup, on_submit)
   -- Keybindings
   local map_opts = { buffer = bufnr, noremap = true, silent = true }
   
-  -- Enter to submit
-  vim.keymap.set({ "n", "i" }, config.options.keymaps.send, function()
+  -- Submit keymaps
+  local function submit_msg()
     local text = M.get_text(bufnr)
     if text ~= "" then
       on_submit(text)
       M.clear(bufnr)
     end
-  end, map_opts)
+  end
+
+  -- Enter to submit
+  vim.keymap.set({ "n", "i" }, config.options.keymaps.send, submit_msg, map_opts)
+  
+  -- Fallback submit keymaps (in case <CR> is hijacked by autopairs/cmp/etc.)
+  vim.keymap.set({ "n", "i" }, "<C-g>", submit_msg, map_opts)
+  vim.keymap.set({ "n", "i" }, "<C-s>", submit_msg, map_opts)
 
   -- Shift-Enter to insert newline
   vim.keymap.set("i", "<S-CR>", "<CR>", map_opts)
