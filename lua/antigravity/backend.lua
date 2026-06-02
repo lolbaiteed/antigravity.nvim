@@ -129,7 +129,7 @@ function M.start()
       if not data then return end
       local err = table.concat(data, "\n"):gsub("^%s*(.-)%s*$", "%1")
       if err ~= "" then
-        utils.log("debug", "[Stderr] " .. err)
+        utils.log("error", "[Stderr] " .. err)
       end
     end,
     on_exit = function(_, exit_code, _)
@@ -147,7 +147,8 @@ function M.start()
   end
 
   -- Call initialize
-  M.request("initialize", {}, function(err, result)
+  local api_key = config.options.backend.api_key or os.getenv("GEMINI_API_KEY")
+  M.request("initialize", { api_key = api_key }, function(err, result)
     if err then
       utils.log("error", "Initialization failed: " .. tostring(err))
     else
