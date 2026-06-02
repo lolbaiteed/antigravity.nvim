@@ -13,6 +13,11 @@ function M.setup_input(popup, on_submit)
   -- Set buffer as modifiable for input
   vim.bo[bufnr].modifiable = true
   
+  -- Disable autopairs for this buffer to avoid conflicts with CR keybinding
+  if package.loaded["nvim-autopairs"] then
+    require("nvim-autopairs").disable(bufnr)
+  end
+  
   -- Render placeholder initially
   M.show_placeholder(bufnr)
   

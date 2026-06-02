@@ -99,7 +99,7 @@ function M.open()
     }, { dir = "col" })
   )
 
-  layout:update()
+  layout:mount()
 
   -- Render existing chat history
   renderer.render_messages(chat_popup.bufnr, chat.get_messages())
@@ -107,6 +107,8 @@ function M.open()
   -- Configure input submit and focus window after layout finishes mounting
   vim.defer_fn(function()
     if not M.is_open() then return end
+    
+    utils.log("info", "[DEBUG] After layout mount - input_popup.winid=" .. tostring(input_popup.winid))
     
     input_module.setup_input(input_popup, function(text)
       local context = nil
