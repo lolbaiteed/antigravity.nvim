@@ -8,7 +8,7 @@ local placeholder_ns = vim.api.nvim_create_namespace("antigravity_placeholder")
 function M.setup_input(popup, on_submit)
   local bufnr = popup.bufnr
   local winid = popup.winid
-  utils.log("info", "[DEBUG] setup_input bufnr=" .. tostring(bufnr) .. " winid=" .. tostring(winid))
+  -- utils.log("info", "[DEBUG] setup_input bufnr=" .. tostring(bufnr) .. " winid=" .. tostring(winid))
   
   -- Set buffer as modifiable for input
   vim.bo[bufnr].modifiable = true
