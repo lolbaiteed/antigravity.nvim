@@ -108,7 +108,7 @@ function M.open()
   vim.defer_fn(function()
     if not M.is_open() then return end
     
-    utils.log("info", "[DEBUG] After layout mount - input_popup.winid=" .. tostring(input_popup.winid))
+    -- utils.log("info", "[DEBUG] After layout mount - input_popup.winid=" .. tostring(input_popup.winid))
     
     input_module.setup_input(input_popup, function(text)
       local context = nil
