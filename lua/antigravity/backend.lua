@@ -65,7 +65,12 @@ function M.start()
 
   local plugin_dir = utils.get_plugin_dir()
   local venv_dir = plugin_dir .. "/.venv"
-  local venv_python = venv_dir .. "/bin/python" or "/Scripts/python"
+  local venv_python
+  if jit and jit.os == "Windows" then
+    venv_python = venv_dir .. "/Scripts/python"
+  else
+    venv_python = venv_dir .. "/bin/python"
+  end
   local python_exe = config.options.backend.python_cmd
   if python_exe == "python3" or python_exe == "python" then
     if vim.g.python3_host_prog and vim.fn.executable(vim.g.python3_host_prog) == 1 then
