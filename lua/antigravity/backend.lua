@@ -76,10 +76,10 @@ function M.start()
   end
 
   -- Auto-create virtual environment if missing
-  if python_exe == "python3" and vim.fn.executable(venv_python) == 0 then
+  if python_exe == "python3"  or python_exe == "python" and vim.fn.executable(venv_python) == 0 then
     is_setting_up = true
     utils.log("info", "Creating plugin virtual environment at " .. venv_dir .. "...")
-    vim.fn.jobstart({ "python3", "-m", "venv", venv_dir }, {
+    vim.fn.jobstart({ python_exe, "-m", "venv", venv_dir }, {
       on_exit = function(_, code)
         if code ~= 0 then
           utils.log("error", "Failed to create virtual environment. Ensure 'python3-venv' or 'python3-full' is installed.")
