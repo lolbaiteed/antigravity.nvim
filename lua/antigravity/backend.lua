@@ -16,21 +16,17 @@ local function parse_messages()
     if not cl_start then
       break
     end
-    
     local length_str = read_buffer:match("Content%-Length: (%d+)", cl_start)
     local length = tonumber(length_str)
-    
     -- Check if we have the full body yet
     local body_start = cl_end + 1
     local body_end = body_start + length - 1
     if #read_buffer < body_end then
       break
     end
-    
     local body = read_buffer:sub(body_start, body_end)
     -- Remove parsed message from read_buffer
     read_buffer = read_buffer:sub(body_end + 1)
-    
     local ok, msg = pcall(vim.json.decode, body)
     if ok and msg then
       if msg.id then
@@ -70,9 +66,8 @@ function M.start()
   local plugin_dir = utils.get_plugin_dir()
   local venv_dir = plugin_dir .. "/.venv"
   local venv_python = venv_dir .. "/bin/python"
-  
   local python_exe = config.options.backend.python_cmd
-  if python_exe == "python3" then
+  if python_exe == "python3" or python_exe == "python" then
     if vim.g.python3_host_prog and vim.fn.executable(vim.g.python3_host_prog) == 1 then
       python_exe = vim.g.python3_host_prog
     elseif vim.fn.executable(venv_python) == 1 then
@@ -91,7 +86,6 @@ function M.start()
           is_setting_up = false
           return
         end
-        
         utils.log("info", "Installing google-antigravity inside virtual environment...")
         vim.fn.jobstart({ venv_python, "-m", "pip", "install", "google-antigravity" }, {
           on_exit = function(_, pip_code)
@@ -115,9 +109,7 @@ function M.start()
   end
 
   local cmd = { python_exe, script_path }
-  
   read_buffer = ""
-  
   job_id = vim.fn.jobstart(cmd, {
     on_stdout = function(_, data, _)
       if not data then return end
@@ -192,7 +184,6 @@ function M.request(method, params, callback)
 
   local body = vim.json.encode(payload)
   local msg = string.format("Content-Length: %d\r\n\r\n%s", #body, body)
-  
   vim.fn.chansend(job_id, msg)
 end
 
