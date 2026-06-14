@@ -184,7 +184,7 @@ class AntigravityBackend:
             response = await agent.chat(full_prompt)
 
             if hasattr(response, "chunks") or hasattr(response, "__aiter__"):
-                async for chunks in response:
+                async for chunk in response:
                     text_chunk = getattr(chunk, "text", str(chunk))
                     await self.send_notification("strem_chunk", {"request_id": request_id, "text": text_chunk, "done": False })
             else:
