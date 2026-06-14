@@ -162,25 +162,41 @@ class AntigravityBackend:
 
         log(f"Received chat request (id={request_id})")
 
+        if not SDK_AVAILABLE:
+            echo_response = f"Echo (No SDK): You said '{message}'\nContext: {list(context.keys())}"
+            words = echo_response.split(" ")
+            for i, word in enumerate(words):
+                await asyncio.sleep(0.05)
+                chunk = f"{word} " if i < len(words) - 1 else word
+                await self.send_notification("stream_chunk", {"request_id": request_id, "text": chunk, "done": False})
+            await self.send_notification("stream_chunk", {"request_id": request_id, "text": "", "done": True})
+            return {"status": "ok"}
+
+        # Look up or create the agent instance for this conversation
+        agent = self.agents.get(conv_id)
+        if not agent:
+            await self.new_conversation({"conversation_id": conv_id})
+            agent = self.agents.get(conv_id)
+
+        if not agent:
+            log(f"Failed to create agent for conversation: {conv_id}")
+            return {"status": "error", "error": "Could not initialize agent"}
+
         try:
-            response = await agent.chat(full_prompt)
+            response = await agent.chat(full_prompt)  # <-- instance, not class
             log(f"Response type: {type(response)}, attrs: {[a for a in dir(response) if not a.startswith('_')]}")
 
-            # Try streaming first, but only if it's a real async iterable
-            # (has __aiter__ AND __anext__, not just one)
             if hasattr(response, "__aiter__") and hasattr(response, "__anext__"):
                 async for chunk in response:
                     text_chunk = getattr(chunk, "text", str(chunk))
                     await self.send_notification("stream_chunk", {"request_id": request_id, "text": text_chunk, "done": False})
 
-            # String response directly
             elif isinstance(response, str):
                 chunk_size = 50
                 for i in range(0, len(response), chunk_size):
                     await asyncio.sleep(0.01)
                     await self.send_notification("stream_chunk", {"request_id": request_id, "text": response[i:i+chunk_size], "done": False})
 
-            # Object with .text attribute (string)
             elif hasattr(response, "text") and isinstance(response.text, str):
                 text = response.text
                 chunk_size = 50
@@ -188,7 +204,6 @@ class AntigravityBackend:
                     await asyncio.sleep(0.01)
                     await self.send_notification("stream_chunk", {"request_id": request_id, "text": text[i:i+chunk_size], "done": False})
 
-            # Object with .text() callable (coroutine)
             elif hasattr(response, "text") and callable(response.text):
                 text = await response.text()
                 chunk_size = 50
@@ -197,7 +212,6 @@ class AntigravityBackend:
                     await self.send_notification("stream_chunk", {"request_id": request_id, "text": text[i:i+chunk_size], "done": False})
 
             else:
-                # Last resort
                 text = str(response)
                 log(f"Unknown response format, falling back to str(): {text[:100]}")
                 await self.send_notification("stream_chunk", {"request_id": request_id, "text": text, "done": False})
@@ -205,8 +219,10 @@ class AntigravityBackend:
             await self.send_notification("stream_chunk", {"request_id": request_id, "text": "", "done": True})
             return {"status": "ok"}
         except Exception as e:
-                log(f"Error during chat: {traceback.format_exc()}")
-                return {"status": "error", "error": str(e)}
+            log(f"Error during chat: {traceback.format_exc()}")
+            return {"status": "error", "error": str(e)}
+
+
     async def send_notification(self, method, params):
         payload = {
             "jsonrpc": "2.0",
