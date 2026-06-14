@@ -186,23 +186,11 @@ class AntigravityBackend:
             response = await agent.chat(full_prompt)  # <-- instance, not class
             log(f"Response type: {type(response)}, attrs: {[a for a in dir(response) if not a.startswith('_')]}")
 
-            if hasattr(response, "__aiter__") and hasattr(response, "__anext__"):
-                async for chunk in response:
+            if hasattr(response, "chunks"):
+                async for chunk in response.chunks:
                     text_chunk = getattr(chunk, "text", str(chunk))
-                    await self.send_notification("stream_chunk", {"request_id": request_id, "text": text_chunk, "done": False})
-
-            elif isinstance(response, str):
-                chunk_size = 50
-                for i in range(0, len(response), chunk_size):
-                    await asyncio.sleep(0.01)
-                    await self.send_notification("stream_chunk", {"request_id": request_id, "text": response[i:i+chunk_size], "done": False})
-
-            elif hasattr(response, "text") and isinstance(response.text, str):
-                text = response.text
-                chunk_size = 50
-                for i in range(0, len(text), chunk_size):
-                    await asyncio.sleep(0.01)
-                    await self.send_notification("stream_chunk", {"request_id": request_id, "text": text[i:i+chunk_size], "done": False})
+                    if text_chunk:
+                        await self.send_notification("stream_chunk", {"request_id": request_id, "text": text_chunk, "done": False})
 
             elif hasattr(response, "text") and callable(response.text):
                 text = await response.text()
