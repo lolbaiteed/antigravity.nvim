@@ -12,19 +12,16 @@ local on_thinking_callbacks = {}
 
 local current_request_id = nil
 
--- Setup stream chunk handler from backend
 backend.on_notification("stream_chunk", function(params)
   local text = params.text
   local done = params.done
-  
-  -- Callbacks
+
   for _, cb in ipairs(on_stream_chunk_callbacks) do
     cb({ text = text, done = done })
   end
 
   if done then
     is_streaming = false
-    -- Update last message in history or handle completion
     for _, cb in ipairs(on_thinking_callbacks) do
       cb(false)
     end
@@ -45,24 +42,22 @@ function M.new_conversation()
       utils.log("info", "Started new conversation.")
     end
   end)
-  
-  -- Notify any listeners
+
   for _, cb in ipairs(on_message_callbacks) do
-    cb(nil) -- Signal reset
+    cb(nil)
   end
 end
 
 function M.send_message(text, context)
   if text == "" then return end
-  
+
   local user_msg = {
     role = "user",
     content = text,
     timestamp = os.time()
   }
   table.insert(messages, user_msg)
-  
-  -- Notify new user message
+
   for _, cb in ipairs(on_message_callbacks) do
     cb(user_msg)
   end
@@ -80,7 +75,7 @@ function M.send_message(text, context)
         cb(false)
       end
       utils.log("error", "Chat request error: " .. tostring(err))
-      
+
       local error_msg = {
         role = "system",
         content = "Error: " .. tostring(err),
@@ -91,8 +86,6 @@ function M.send_message(text, context)
         cb(error_msg)
       end
     else
-      -- Complete reply logic: chunk stream handled via stream_chunk notifications
-      -- Let's construct assistant message when streaming completes
     end
   end)
 end

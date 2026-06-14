@@ -11,21 +11,18 @@ local read_buffer = ""
 
 local function parse_messages()
   while true do
-    -- Find content length header
     local cl_start, cl_end = read_buffer:find("Content%-Length: %d+\r?\n\r?\n")
     if not cl_start then
       break
     end
     local length_str = read_buffer:match("Content%-Length: (%d+)", cl_start)
     local length = tonumber(length_str)
-    -- Check if we have the full body yet
     local body_start = cl_end + 1
     local body_end = body_start + length - 1
     if #read_buffer < body_end then
       break
     end
     local body = read_buffer:sub(body_start, body_end)
-    -- Remove parsed message from read_buffer
     read_buffer = read_buffer:sub(body_end + 1)
     local ok, msg = pcall(vim.json.decode, body)
     if ok and msg then
@@ -43,7 +40,6 @@ local function parse_messages()
           end)
         end
       elseif msg.method then
-        -- Notification
         local handler = notification_handlers[msg.method]
         if handler then
           vim.schedule(function()
@@ -80,14 +76,14 @@ function M.start()
     end
   end
 
-  -- Auto-create virtual environment if missing
-  if python_exe == "python3"  or python_exe == "python" and vim.fn.executable(venv_python) == 0 then
+  if python_exe == "python3" or python_exe == "python" and vim.fn.executable(venv_python) == 0 then
     is_setting_up = true
     utils.log("info", "Creating plugin virtual environment at " .. venv_dir .. "...")
     vim.fn.jobstart({ python_exe, "-m", "venv", venv_dir }, {
       on_exit = function(_, code)
         if code ~= 0 then
-          utils.log("error", "Failed to create virtual environment. Ensure 'python3-venv' or 'python3-full' is installed.")
+          utils.log("error",
+            "Failed to create virtual environment. Ensure 'python3-venv' or 'python3-full' is installed.")
           is_setting_up = false
           return
         end
@@ -143,7 +139,6 @@ function M.start()
     return false
   end
 
-  -- Call initialize
   local api_key = config.options.backend.api_key or os.getenv("GEMINI_API_KEY")
   M.request("initialize", { api_key = api_key }, function(err, result)
     if err then

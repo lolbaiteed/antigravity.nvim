@@ -1,27 +1,23 @@
 local M = {}
 
 M.defaults = {
-  -- Window configuration
   window = {
-    position = "right",     -- "right", "left"
-    width = "35%",           -- Sidebar width
-    input_height = 4,        -- input box height in lines
+    position = "right",
+    width = "35%",
+    input_height = 4,
   },
-  -- Backend configuration
   backend = {
     python_cmd = "python3",
-    script_path = nil,       -- Autodetected in backend.lua
+    script_path = nil,
   },
-  -- Keymaps (buffer-local in chat / input windows)
   keymaps = {
     toggle = "<leader>ac",
-    send = "<CR>",           -- Submit message in input popup normal/insert mode depending on context
-    close = "q",             -- Close in chat display popup
+    send = "<CR>",
+    close = "q",
     new_chat = "<leader>an",
     scroll_up = "<C-u>",
     scroll_down = "<C-d>",
   },
-  -- Appearance
   icons = {
     user = "●",
     assistant = "◆",

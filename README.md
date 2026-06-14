@@ -2,6 +2,9 @@
 
 A modern VS Code-style sidebar AI chat panel for Neovim, integrated directly with Google's Antigravity AI coding assistant SDK (`google-antigravity`).
 
+## Warining
+The project is still in alpha, so if you found a bug, want to add some features, or know how to do it better, push a PR or open an issue :)
+
 ## Features
 - **Sidebar Layout:** A dedicated split panel for chats and input, powered by `nui.nvim`.
 - **Streaming Responses:** Real-time token rendering with a custom CSS/UI thinking spinner.
@@ -22,8 +25,7 @@ A modern VS Code-style sidebar AI chat panel for Neovim, integrated directly wit
 ### Using [lazy.nvim](https://github.com/folke/lazy.nvim)
 ```lua
 {
-  "google/antigravity.nvim", -- Or local path directory
-  dir = "/path/to/antigravity.nvim", -- If installing from local path
+  "lolbaiteed/antigravity.nvim", -- Or local path directory
   dependencies = {
     "MunifTanjim/nui.nvim",
     "nvim-treesitter/nvim-treesitter", -- For syntax highlighting inside chat

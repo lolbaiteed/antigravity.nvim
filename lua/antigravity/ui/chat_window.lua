@@ -34,7 +34,7 @@ function M.open()
 
   original_winid = vim.api.nvim_get_current_win()
 
-  -- Main Split container
+
   sidebar_split = nui_split({
     position = config.options.window.position,
     size = config.options.window.width,
@@ -43,10 +43,10 @@ function M.open()
 
   sidebar_split:mount()
 
-  -- Split win config options
+
   vim.wo[sidebar_split.winid].winfixwidth = true
 
-  -- Chat buffer popup
+
   chat_popup = nui_popup({
     enter = false,
     focusable = true,
@@ -69,7 +69,7 @@ function M.open()
     },
   })
 
-  -- Input buffer popup
+
   input_popup = nui_popup({
     enter = true,
     focusable = true,
@@ -90,7 +90,7 @@ function M.open()
     },
   })
 
-  -- Construct Layout inside the split window
+
   local layout = nui_layout(
     sidebar_split,
     nui_layout.Box({
@@ -101,15 +101,15 @@ function M.open()
 
   layout:mount()
 
-  -- Render existing chat history
+
   renderer.render_messages(chat_popup.bufnr, chat.get_messages())
 
-  -- Configure input submit and focus window after layout finishes mounting
+
   vim.defer_fn(function()
     if not M.is_open() then return end
-    
+
     -- utils.log("info", "[DEBUG] After layout mount - input_popup.winid=" .. tostring(input_popup.winid))
-    
+
     input_module.setup_input(input_popup, function(text)
       local context = nil
       -- If original window is valid, grab context from it
@@ -121,31 +121,31 @@ function M.open()
       else
         context = utils.get_buffer_context()
       end
-      
+
       renderer.start_assistant_message(chat_popup.bufnr)
       chat.send_message(text, context)
     end)
 
-    -- Focus the input window explicitly once it's mounted
+
     if input_popup and input_popup.winid and vim.api.nvim_win_is_valid(input_popup.winid) then
       pcall(vim.api.nvim_set_current_win, input_popup.winid)
     end
   end, 50)
 
-  -- Chat display local keymaps
+
   local map_opts = { buffer = chat_popup.bufnr, noremap = true, silent = true }
-  
-  -- Close mapping
+
+
   vim.keymap.set("n", config.options.keymaps.close, function()
     M.close()
   end, map_opts)
 
-  -- New chat mapping
+
   vim.keymap.set("n", config.options.keymaps.new_chat, function()
     chat.new_conversation()
   end, map_opts)
 
-  -- Autoscroll callback registrations
+
   local function scroll_to_bottom()
     if not M.is_open() then return end
     local line_count = vim.api.nvim_buf_line_count(chat_popup.bufnr)
@@ -155,10 +155,8 @@ function M.open()
   chat.on_message(function(msg)
     if not M.is_open() then return end
     if not msg then
-      -- Conversation reset
       renderer.render_messages(chat_popup.bufnr, {})
     else
-      -- Only re-render for user messages, not assistant (streaming is handled by chunks)
       if msg.role == "user" then
         renderer.render_messages(chat_popup.bufnr, chat.get_messages())
       end

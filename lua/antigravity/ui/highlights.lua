@@ -8,7 +8,7 @@ function M.setup()
     AntigravityBorder = { link = "FloatBorder" },
     AntigravityTitle = { link = "Title" },
     AntigravityInput = { link = "Normal" },
-    AntigravityInputBorder = { fg = "#7aa2f7" },  -- Default aesthetic blue border, matches FloatBorder fallback
+    AntigravityInputBorder = { fg = "#7aa2f7" },
     AntigravityThinking = { link = "DiagnosticInfo" },
     AntigravitySeparator = { link = "WinSeparator" },
     AntigravityTimestamp = { link = "Comment" },

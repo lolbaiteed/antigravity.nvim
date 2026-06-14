@@ -3,7 +3,6 @@ if vim.g.loaded_antigravity then
 end
 vim.g.loaded_antigravity = 1
 
--- Register user commands
 vim.api.nvim_create_user_command("AntigravityToggle", function()
   require("antigravity").toggle()
 end, { desc = "Toggle Antigravity Chat Panel" })

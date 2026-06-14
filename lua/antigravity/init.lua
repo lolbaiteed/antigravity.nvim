@@ -6,16 +6,10 @@ local utils = require("antigravity.utils")
 local M = {}
 
 function M.setup(opts)
-  -- Initialize configurations
   config.setup(opts)
-  
-  -- Setup highlight groups
+
   require("antigravity.ui.highlights").setup()
-  
-  -- Lazy start the backend if requested (default to lazy, startup on demand)
-  -- If you want it started eagerly, you can call backend.start()
-  
-  -- Register global toggle keymap if configured
+
   if config.options.keymaps.toggle then
     vim.keymap.set("n", config.options.keymaps.toggle, function()
       M.toggle()
@@ -44,11 +38,9 @@ end
 function M.ask(text)
   M.open()
   if text and text ~= "" then
-    -- Let's give the UI window a tiny moment to construct if it just opened
     vim.defer_fn(function()
       local context = utils.get_buffer_context()
       local chat_window = require("antigravity.ui.chat_window")
-      -- Start assistant block render
       local bufnr = chat_window.get_chat_bufnr and chat_window.get_chat_bufnr()
       if bufnr then
         require("antigravity.ui.renderer").start_assistant_message(bufnr)
@@ -64,13 +56,12 @@ function M.send_selection()
     utils.log("warn", "No visual selection found.")
     return
   end
-  
+
   M.open()
   vim.defer_fn(function()
     local context = utils.get_buffer_context()
     context.selection = text
-    
-    -- Ask user for the prompt to go with the selection
+
     vim.ui.input({ prompt = "Ask with selection: " }, function(input)
       if not input or input == "" then return end
       chat.send_message(input, context)

@@ -6,10 +6,8 @@ function M.log(level, msg)
 end
 
 function M.get_plugin_dir()
-  -- Gets path of currently executing file
   local info = debug.getinfo(1, "S")
-  local path = info.source:sub(2) -- strip the '@' character
-  -- Go up 3 levels: lua/antigravity/utils.lua -> lua/antigravity/ -> lua/ -> root/
+  local path = info.source:sub(2)
   return vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(path)))
 end
 

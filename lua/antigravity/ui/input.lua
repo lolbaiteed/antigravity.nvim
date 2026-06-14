@@ -9,19 +9,19 @@ function M.setup_input(popup, on_submit)
   local bufnr = popup.bufnr
   local winid = popup.winid
   -- utils.log("info", "[DEBUG] setup_input bufnr=" .. tostring(bufnr) .. " winid=" .. tostring(winid))
-  
-  -- Set buffer as modifiable for input
+
+
   vim.bo[bufnr].modifiable = true
-  
-  -- Disable autopairs for this buffer to avoid conflicts with CR keybinding
+
+
   if package.loaded["nvim-autopairs"] then
     require("nvim-autopairs").disable(bufnr)
   end
-  
-  -- Render placeholder initially
+
+
   M.show_placeholder(bufnr)
-  
-  -- Setup autocmds for placeholder show/hide
+
+
   vim.api.nvim_create_autocmd({ "TextChangedI", "TextChanged" }, {
     buffer = bufnr,
     callback = function()
@@ -31,13 +31,11 @@ function M.setup_input(popup, on_submit)
       else
         M.clear_placeholder(bufnr)
       end
-      
-      -- Auto-resize
+
+
       local line_count = #lines
       local height = math.min(math.max(line_count, config.options.window.input_height), 10)
       if popup.layout then
-        -- If part of nui.layout, we could adjust, but keeping it simpler:
-        -- Let's just adjust the window height if needed.
         local current_height = vim.api.nvim_win_get_height(winid)
         if current_height ~= height then
           pcall(vim.api.nvim_win_set_height, winid, height)
@@ -46,10 +44,10 @@ function M.setup_input(popup, on_submit)
     end
   })
 
-  -- Keybindings
+
   local map_opts = { buffer = bufnr, noremap = true, silent = true }
-  
-  -- Submit keymaps
+
+
   local function submit_msg()
     utils.log("info", "[DEBUG] submit_msg triggered!")
     utils.log("info", "[DEBUG] Current buffer: " .. tostring(vim.api.nvim_get_current_buf()))
@@ -61,10 +59,10 @@ function M.setup_input(popup, on_submit)
     end
   end
 
-  -- Enter to submit
+
   vim.keymap.set({ "n", "i" }, config.options.keymaps.send, submit_msg, map_opts)
-  
-  -- Fallback submit keymaps (in case <CR> is hijacked by autopairs/cmp/etc.)
+
+
   vim.keymap.set({ "n", "i" }, "<C-g>", submit_msg, map_opts)
   vim.keymap.set({ "n", "i" }, "<C-s>", submit_msg, map_opts)
 
@@ -87,7 +85,7 @@ end
 
 function M.get_text(bufnr)
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-  -- Strip whitespace lines
+
   return table.concat(lines, "\n"):gsub("^%s*(.-)%s*$", "%1")
 end
 

@@ -48,6 +48,6 @@ Initialize the plugin in your `init.lua`:
 ==============================================================================
 LICENSE                                                    *antigravity-license*
 
-Apache License 2.0
+MIT License
 
 vim:tw=78:ts=8:ft=help:norl:
