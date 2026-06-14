@@ -162,7 +162,7 @@ class AntigravityBackend:
 
         log(f"Received chat request (id={request_id})")
 
-         try:
+        try:
             response = await agent.chat(full_prompt)
             log(f"Response type: {type(response)}, attrs: {[a for a in dir(response) if not a.startswith('_')]}")
 
@@ -205,8 +205,8 @@ class AntigravityBackend:
             await self.send_notification("stream_chunk", {"request_id": request_id, "text": "", "done": True})
             return {"status": "ok"}
         except Exception as e:
-            log(f"Error during chat: {traceback.format_exc()}")
-            return {"status": "error", "error": str(e)}
+                log(f"Error during chat: {traceback.format_exc()}")
+                return {"status": "error", "error": str(e)}
     async def send_notification(self, method, params):
         payload = {
             "jsonrpc": "2.0",
