@@ -8,7 +8,7 @@ import traceback
 
 try:
     from google.antigravity import Agent, LocalAgentConfig
-    from google.antigravity.types import GeminiConifg
+    from google.antigravity.types import GeminiConfig
     SDK_AVAILABLE = True
 except ImportError:
     SDK_AVAILABLE = False
@@ -103,7 +103,7 @@ class AntigravityBackend:
 
         try:
             config = LocalAgentConfig(
-                gemini_config=GeminiConifg(model=self.model)
+                gemini_config=GeminiConfig(model=self.model)
             )
             self.default_agent = Agent(config)
             await self.default_agent.__aenter__()
@@ -128,7 +128,7 @@ class AntigravityBackend:
 
         try:
             config = LocalAgentConfig(
-                gemini_config=GeminiConifg(model=self.model)
+                gemini_config=GeminiConfig(model=self.model)
             )
             agent = Agent(config)
             await agent.__aenter__()
