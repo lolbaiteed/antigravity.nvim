@@ -8,6 +8,7 @@ import traceback
 
 try:
     from google.antigravity import Agent, LocalAgentConfig
+    from google.antigravity.types import GeminiConifg
     SDK_AVAILABLE = True
 except ImportError:
     SDK_AVAILABLE = False
@@ -63,6 +64,7 @@ class AntigravityBackend:
     def __init__(self):
         self.agents = {}
         self.default_agent = None
+        self.model = "gemini-2.5-flash"
 
     async def initialize(self, params):
         global SDK_AVAILABLE
@@ -92,12 +94,17 @@ class AntigravityBackend:
         if not SDK_AVAILABLE:
             return {"status": "echo_mode", "version": "0.1.0", "info": "google-antigravity SDK missing"}
 
+        if params.get("model"):
+            self.model = params["model"]
+
         api_key = params.get("api_key")
         if api_key:
             os.environ["GEMINI_API_KEY"] = api_key
 
         try:
-            config = LocalAgentConfig()
+            config = LocalAgentConfig(
+                gemini_config=GeminiConifg(model=self.model)
+            )
             self.default_agent = Agent(config)
             await self.default_agent.__aenter__()
             self.agents["default"] = self.default_agent
@@ -120,7 +127,9 @@ class AntigravityBackend:
                 log(f"Error closing agent: {e}")
 
         try:
-            config = LocalAgentConfig()
+            config = LocalAgentConfig(
+                gemini_config=GeminiConifg(model=self.model)
+            )
             agent = Agent(config)
             await agent.__aenter__()
             self.agents[conv_id] = agent
