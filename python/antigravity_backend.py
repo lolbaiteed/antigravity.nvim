@@ -103,7 +103,7 @@ class AntigravityBackend:
 
         try:
             config = LocalAgentConfig(
-                gemini_config=GeminiConfig(model=self.model)
+                model = self.model
             )
             self.default_agent = Agent(config)
             await self.default_agent.__aenter__()
@@ -128,7 +128,7 @@ class AntigravityBackend:
 
         try:
             config = LocalAgentConfig(
-                gemini_config=GeminiConfig(model=self.model)
+                model = self.model
             )
             agent = Agent(config)
             await agent.__aenter__()
