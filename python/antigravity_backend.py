@@ -21,25 +21,17 @@ def log(msg):
 # ---------------------------------------------------------------------------
 # Cross-platform stdin reader
 #
-# Linux:  connect_read_pipe works fine with the default SelectorEventLoop,
-#         giving us a fully async StreamReader.
-#
+# Linux:   connect_read_pipe works fine with SelectorEventLoop → pure async.
 # Windows: ProactorEventLoop (default) has a broken _ProactorReadPipeTransport
 #          in Python 3.12+/3.14, and SelectorEventLoop doesn't implement
-#          connect_read_pipe at all. So we fall back to run_in_executor to
-#          push blocking stdin reads onto a thread, keeping the event loop free.
+#          connect_read_pipe at all. Use run_in_executor (thread) instead.
 # ---------------------------------------------------------------------------
 
 if sys.platform == "win32":
     class _StdinReader:
-        """Thread-based stdin reader for Windows (ProactorEventLoop compatible)."""
-
-        def __init__(self):
-            self._loop = None
-            self._buf = sys.stdin.buffer
-
-        def _set_loop(self, loop):
+        def __init__(self, loop):
             self._loop = loop
+            self._buf = sys.stdin.buffer
 
         async def readline(self):
             return await self._loop.run_in_executor(None, self._buf.readline)
@@ -56,13 +48,10 @@ if sys.platform == "win32":
             return await self._loop.run_in_executor(None, _read)
 
     async def make_stdin_reader():
-        reader = _StdinReader()
-        reader._set_loop(asyncio.get_running_loop())
-        return reader
+        return _StdinReader(asyncio.get_running_loop())
 
 else:
     async def make_stdin_reader():
-        """Async StreamReader via connect_read_pipe (Linux/macOS)."""
         loop = asyncio.get_running_loop()
         reader = asyncio.StreamReader()
         protocol = asyncio.StreamReaderProtocol(reader)
@@ -72,7 +61,7 @@ else:
 
 class AntigravityBackend:
     def __init__(self):
-        self.agents = {}  # conversation_id -> Agent instance
+        self.agents = {}
         self.default_agent = None
 
     async def initialize(self, params):
@@ -147,7 +136,7 @@ class AntigravityBackend:
 
         full_prompt = ""
         if context.get("content"):
-            full_prompt += f"--- CURRENT FILE CONTEXT ---\n"
+            full_prompt += "--- CURRENT FILE CONTEXT ---\n"
             full_prompt += f"File: {context.get('file', 'unknown')}\n"
             full_prompt += f"Language: {context.get('filetype', 'unknown')}\n"
             full_prompt += "```" + context.get('filetype', '') + "\n"
@@ -155,7 +144,7 @@ class AntigravityBackend:
             full_prompt += "```\n"
 
         if context.get("selection"):
-            full_prompt += f"--- VISUAL SELECTION CONTEXT ---\n"
+            full_prompt += "--- VISUAL SELECTION CONTEXT ---\n"
             full_prompt += "```\n" + context.get("selection") + "\n```\n"
 
         full_prompt += f"--- USER MESSAGE ---\n{message}"
@@ -172,7 +161,7 @@ class AntigravityBackend:
             await self.send_notification("stream_chunk", {"request_id": request_id, "text": "", "done": True})
             return {"status": "ok"}
 
-        # Look up or create the agent instance for this conversation
+        # Look up or lazily create the agent instance for this conversation
         agent = self.agents.get(conv_id)
         if not agent:
             await self.new_conversation({"conversation_id": conv_id})
@@ -183,16 +172,39 @@ class AntigravityBackend:
             return {"status": "error", "error": "Could not initialize agent"}
 
         try:
-            response = await agent.chat(full_prompt)  # <-- instance, not class
-            log(f"Response type: {type(response)}, attrs: {[a for a in dir(response) if not a.startswith('_')]}")
+            response = await agent.chat(full_prompt)
+            log(f"Response type: {type(response)}")
 
+            # google.antigravity.types.ChatResponse has a .chunks async iterable
             if hasattr(response, "chunks"):
                 async for chunk in response.chunks:
-                    text_chunk = getattr(chunk, "text", str(chunk))
-                    log(f"Chunk: {repr(text_chunk[:30])}")
+                    text_chunk = getattr(chunk, "text", None) or str(chunk)
                     if text_chunk:
                         await self.send_notification("stream_chunk", {"request_id": request_id, "text": text_chunk, "done": False})
 
+            # Plain async iterable (future-proofing)
+            elif hasattr(response, "__aiter__") and hasattr(response, "__anext__"):
+                async for chunk in response:
+                    text_chunk = getattr(chunk, "text", None) or str(chunk)
+                    if text_chunk:
+                        await self.send_notification("stream_chunk", {"request_id": request_id, "text": text_chunk, "done": False})
+
+            # Plain string
+            elif isinstance(response, str):
+                chunk_size = 50
+                for i in range(0, len(response), chunk_size):
+                    await asyncio.sleep(0.01)
+                    await self.send_notification("stream_chunk", {"request_id": request_id, "text": response[i:i+chunk_size], "done": False})
+
+            # Object with .text string attribute
+            elif hasattr(response, "text") and isinstance(response.text, str):
+                text = response.text
+                chunk_size = 50
+                for i in range(0, len(text), chunk_size):
+                    await asyncio.sleep(0.01)
+                    await self.send_notification("stream_chunk", {"request_id": request_id, "text": text[i:i+chunk_size], "done": False})
+
+            # Object with .text() coroutine
             elif hasattr(response, "text") and callable(response.text):
                 text = await response.text()
                 chunk_size = 50
@@ -210,7 +222,6 @@ class AntigravityBackend:
         except Exception as e:
             log(f"Error during chat: {traceback.format_exc()}")
             return {"status": "error", "error": str(e)}
-
 
     async def send_notification(self, method, params):
         payload = {
