@@ -19,15 +19,6 @@ def log(msg):
     sys.stderr.flush()
 
 
-# ---------------------------------------------------------------------------
-# Cross-platform stdin reader
-#
-# Linux:   connect_read_pipe works fine with SelectorEventLoop → pure async.
-# Windows: ProactorEventLoop (default) has a broken _ProactorReadPipeTransport
-#          in Python 3.12+/3.14, and SelectorEventLoop doesn't implement
-#          connect_read_pipe at all. Use run_in_executor (thread) instead.
-# ---------------------------------------------------------------------------
-
 if sys.platform == "win32":
     class _StdinReader:
         def __init__(self, loop):
