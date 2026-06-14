@@ -173,49 +173,17 @@ class AntigravityBackend:
 
         try:
             response = await agent.chat(full_prompt)
-            log(f"Response type: {type(response)}")
 
-            # google.antigravity.types.ChatResponse has a .chunks async iterable
-            if hasattr(response, "chunks"):
-                async for chunk in response.chunks:
-                    text_chunk = getattr(chunk, "text", None) or str(chunk)
-                    if text_chunk:
-                        await self.send_notification("stream_chunk", {"request_id": request_id, "text": text_chunk, "done": False})
-
-            # Plain async iterable (future-proofing)
-            elif hasattr(response, "__aiter__") and hasattr(response, "__anext__"):
-                async for chunk in response:
-                    text_chunk = getattr(chunk, "text", None) or str(chunk)
-                    if text_chunk:
-                        await self.send_notification("stream_chunk", {"request_id": request_id, "text": text_chunk, "done": False})
-
-            # Plain string
-            elif isinstance(response, str):
-                chunk_size = 50
-                for i in range(0, len(response), chunk_size):
-                    await asyncio.sleep(0.01)
-                    await self.send_notification("stream_chunk", {"request_id": request_id, "text": response[i:i+chunk_size], "done": False})
-
-            # Object with .text string attribute
-            elif hasattr(response, "text") and isinstance(response.text, str):
-                text = response.text
-                chunk_size = 50
-                for i in range(0, len(text), chunk_size):
-                    await asyncio.sleep(0.01)
-                    await self.send_notification("stream_chunk", {"request_id": request_id, "text": text[i:i+chunk_size], "done": False})
-
-            # Object with .text() coroutine
-            elif hasattr(response, "text") and callable(response.text):
+            if hasattr(response, "chunks") or hasattr(response, "__aiter__"):
+                async for chunks in response:
+                    text_chunk = getattr(chunk, "text", str(chunk))
+                    await self.send_notification("strem_chunk", {"request_id": request_id, "text": text_chunk, "done": False })
+            else:
                 text = await response.text()
                 chunk_size = 50
-                for i in range(0, len(text), chunk_size):
+                for i in range(0, len(chunk), chunk_size):
                     await asyncio.sleep(0.01)
                     await self.send_notification("stream_chunk", {"request_id": request_id, "text": text[i:i+chunk_size], "done": False})
-
-            else:
-                text = str(response)
-                log(f"Unknown response format, falling back to str(): {text[:100]}")
-                await self.send_notification("stream_chunk", {"request_id": request_id, "text": text, "done": False})
 
             await self.send_notification("stream_chunk", {"request_id": request_id, "text": "", "done": True})
             return {"status": "ok"}
