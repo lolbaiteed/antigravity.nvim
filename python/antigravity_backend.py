@@ -191,7 +191,7 @@ class AntigravityBackend:
                     text_chunk = getattr(chunk, "text", str(chunk))
                     log(f"Chunk: {repr(text_chunk[:30])}")
                     if text_chunk:
-                        await self.send_notification("stream_chunk", ...)
+                        await self.send_notification("stream_chunk", {"request_id": request_id, "text": text_chunk, "done": False})
 
             elif hasattr(response, "text") and callable(response.text):
                 text = await response.text()
