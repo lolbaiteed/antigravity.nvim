@@ -24,6 +24,7 @@ M.defaults = {
     system = "▶",
     thinking = "⟳",
   },
+  model = "gemini-2.5-flash"
 }
 
 M.options = {}
